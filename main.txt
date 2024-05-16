@@ -1,0 +1,32 @@
+import json
+import pandas as pd
+
+def write_to_json(data, filename="db.json"):
+    with open(filename, "w") as file:
+        json.dump(data, file, indent=4)
+
+# Load CSV data into a DataFrame
+data = pd.read_csv("constandwards.csv")
+
+# Convert County ID to string for consistency
+data['id'] = data['id'].astype(str)
+
+# Group data by 'County' and 'Constituency_name' and aggregate 'Ward' values into a list
+grouped_data = data.groupby(['County', 'Constituency_name'])['Ward'].apply(list).reset_index()
+
+# Convert grouped data to a list of dictionaries
+constituencies = []
+
+for index, row in grouped_data.iterrows():
+    constituency_dict = {
+        "County": str(row['County']),
+        "Constituency_name": row['Constituency_name'],
+        "Ward": row['Ward']
+    }
+    # Check if county ID exists in the original DataFrame
+    county_match = data[data['id'] == str(row['County'])]['County'].tolist()
+    if county_match:
+        # Add the county name to the dictionary
+        constituency_dict["County_name"] = county_match[0]
+    
+    constituencies.append(constituency_dict)
